@@ -24,7 +24,6 @@ export default function MainPage() {
     const [currentUser, setCurrentUser] = useState<User>();
     const socketRef = useRef<Socket | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
-
     const [isUserOnPc, setIsUserOnPc] = useState<boolean>(true)
 
     useEffect(() => {
@@ -32,13 +31,15 @@ export default function MainPage() {
             if (window.innerWidth < 500) {
                 setIsUserOnPc(false)
             }
-
+            else {
+                setIsUserOnPc(true)
+            }
         };
         window.addEventListener("resize", handleResize);
         handleResize();
+
         return () => window.removeEventListener("resize", handleResize);
     }, []);
-
 
     useEffect(() => {
         const fetchData = async () => {
@@ -225,7 +226,7 @@ export default function MainPage() {
                     </div>
                 </div>
                 :
-                <MainPageMobile></MainPageMobile>
+                <MainPageMobile />
             }
         </>
     );

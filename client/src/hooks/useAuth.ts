@@ -1,6 +1,7 @@
-import axios from "axios";
+import axios, { Axios, HttpStatusCode, ResponseType } from "axios";
 import { toast, Zoom } from "react-toastify";
 import { AxiosResponse } from "axios";
+import type { redirectToastMessage } from "../types/redirectToastMessage"
 
 type AuthResponse = {
     isLoggedIn: boolean;
@@ -14,7 +15,7 @@ export const useAuth = () => {
         password: string,
         confirmPassword: string,
         genderValue: string,
-        navigate: (path: string) => void,
+        navigate: (path: string, options?: { state?: redirectToastMessage }) => void,
     ) {
         try {
             const response = await axios.post(
@@ -29,14 +30,7 @@ export const useAuth = () => {
             );
 
             if (response.status === 201) {
-                navigate("/login");
-
-                toast.success("Account was successfully created", {
-                    position: "top-center",
-                    pauseOnHover: true,
-                    draggable: true,
-                    transition: Zoom,
-                });
+                navigate("/login", { state: { showToast: true, message: 'We’ve sent you a verification email. Please check your inbox to verify your account.' } });
             }
         } catch (e: any) {
             toast.error(`An error has occured: ${e.response.data.error}`, {
@@ -70,6 +64,12 @@ export const useAuth = () => {
                 position: "top-center",
                 transition: Zoom,
             });
+
+            if (e.response.status === 403) {
+                if (e.response.data.errorType === 'emailNotVerified') {
+                    navigate("/verify-email")
+                }
+            }
         }
     }
 
@@ -87,12 +87,48 @@ export const useAuth = () => {
                 toast.success("You have successfully logged out.");
             }
         } catch (e: any) {
-            // Si erreur 401, ex: utilisateur n'est pas connecté et veut se déconnecter
             toast.error(
                 `An error has occurred: ${e.response?.data?.error || e.message}`,
             );
         } finally {
             navigate("/login");
+        }
+    }
+
+    async function handleVerifyEmail(token: string): Promise<AxiosResponse> {
+        try {
+            const response = await axios.get(
+                `http://localhost:5000/api/auth/verify-email?token=${token}`
+            )
+
+            return response;
+        } 
+        catch (e: any) {
+            /*toast.error(
+                `An error has occurred: ${e.response?.data?.error || e.message}`
+            )*/
+
+            return e.response;
+        }
+    }
+
+    async function handleResendVerificationEmail(email: string) {
+        try {
+            const response = await axios.post(
+                `http://localhost:5000/api/auth/verify-email/resend`,
+                {
+                    email
+                }
+            )
+
+            if (response.status === 200) {
+                toast.success(response.data.message)
+            }
+        }
+        catch (e: any) {
+            toast.error(
+                `An error has occurred: ${e.response?.data?.error || e.message}`,
+            );
         }
     }
 
@@ -122,5 +158,5 @@ export const useAuth = () => {
         }
     }
 
-    return { handleRegister, handleLogin, handleLogout, checkAuth };
+    return { handleRegister, handleLogin, handleLogout, handleVerifyEmail, handleResendVerificationEmail, checkAuth };
 };

@@ -9,9 +9,8 @@ export const sendMessage = async (req: Request, res: Response): Promise<any> => 
         const { id: receiverId } = req.params
         const senderId = req['user']._id;
 
-        if (!message)  {
-            res.status(400).send()
-            return;
+        if (!message) {
+            return res.status(400).json({ error: 'Message is required' });
         }
 
         let conversation = await Conversation.findOne({

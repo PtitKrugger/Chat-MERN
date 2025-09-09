@@ -9,6 +9,7 @@ import Login from "./pages/auth/Login.tsx";
 import Logout from "./pages/auth/Logout.tsx";
 import MainPage from "./pages/chat/MainPage.tsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
+import VerifyEmail from "./pages/auth/VerifyEmail.tsx";
 
 function getRouter() {
   const router = createBrowserRouter([
@@ -23,6 +24,10 @@ function getRouter() {
     {
       path: "/logout",
       element: <Logout />,
+    },
+    {
+        path: "verify-email",
+        element: <VerifyEmail />
     },
     {
       element: <ProtectedRoute />,

@@ -1,15 +1,32 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
-import { Link } from "react-router";
-import { ToastContainer } from "react-toastify";
+import { Link, useLocation } from "react-router";
+import { toast, ToastContainer, Zoom } from "react-toastify";
 import { useNavigate } from "react-router";
+
 import { useAuth } from "../../hooks/useAuth";
+import type { redirectToastMessage } from "../../types/redirectToastMessage"
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const { handleLogin } = useAuth();
     const navigate = useNavigate();
+
+    const location = useLocation();
+    const state = location.state as redirectToastMessage | undefined;
+
+    useEffect(() => {
+        if (state?.showToast) {
+            toast.success(state.message, {
+                position: "top-center",
+                pauseOnHover: true,
+                draggable: true,
+                transition: Zoom,
+            });
+        }        
+    }, [state])
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -18,11 +35,7 @@ export default function Login() {
 
     return (
         <div className="flex h-full">
-            <ToastContainer
-                position="top-center"
-                toastClassName="text-black"
-                aria-label=""
-            />
+            <ToastContainer position="top-center" toastClassName="text-black" aria-label="" />
             <div className="flex min-h-min min-w-min flex-1 flex-col justify-center px-6 py-12 lg:px-8">
                 <div className="sm:mx-auto sm:w-full sm:max-w-sm">
                     <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">

@@ -11,15 +11,17 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/nodemailer": "^7.0.1",
     "bcryptjs": "^2.4.3",
     "chalk": "^5.4.1",
     "cookie": "^1.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4",
+    "nodemailer": "^7.0.6",
     "react-toastify": "^11.0.2",
     "socket.io": "^4.8.1"
   },

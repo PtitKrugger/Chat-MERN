@@ -29,10 +29,26 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    isBanned: {
+        type: Boolean,
+        default: false
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailToken: {
+        type: String,
+        default: ""
+    },
+    emailTokenExpires: {
+        type: Date,
+        default: undefined
+    },
     jwt: {
         type: String,
         default: ""
-    }
+    },
 }, {timestamps: true})
 
 const User = mongoose.model("User", userSchema);

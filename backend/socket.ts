@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import cookie from "cookie";
 import { Server } from "socket.io";
 import { consoleLog } from "./utils/customConsole";
-import { Request, Response } from "express";
 
 const usersSockets = {};
 var io: Server;

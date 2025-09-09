@@ -23,9 +23,9 @@ export default function MainPage() {
     const [currentUser, setCurrentUser] = useState<User>();
     const socketRef = useRef<Socket | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
-
     const [isVisible, setIsVisible] = useState(true);
-    const [isSliding, setIsSliding] = useState(false);
+    const [isUsersDivSliding, setIsUsersDivSliding] = useState(false);
+    const [isChatDivSliding, setIsChatDivSliding] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -68,10 +68,6 @@ export default function MainPage() {
         }
     }, [messages]);
 
-    function wait(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     async function changeSelectedUser(userId: string) {
         const user = JSON.parse(JSON.stringify(users.find(u => u._id === userId)));
         const selectedUser = users.find(u => u._id === userId);
@@ -87,8 +83,10 @@ export default function MainPage() {
 
             if (response) {
                 setMessages(response.data as Array<Message>);
-                setIsSliding(true)
-                await wait(600)
+                setIsUsersDivSliding(true)
+                await wait(650)
+                setIsUsersDivSliding(false)
+
                 setIsVisible(false)
             }
         }
@@ -129,12 +127,23 @@ export default function MainPage() {
         }
     }
 
+    function wait(ms: number) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function goBack() {
+        setIsChatDivSliding(true)
+        // Wait for the DIV transition
+        await wait(650)
+        setIsChatDivSliding(false)
+        setIsVisible(true)
+    }
+
     return (
         <>
+            <ToastContainer position="top-center" toastClassName="text-black" aria-label="" />
             {isVisible ?
-                <div className={`transform transition-all duration-700 ease-in-out
-                            ${!isSliding ? "translate-x-0" : "-translate-x-full"}
-                            `}>
+                <div className={`${isUsersDivSliding ? "transition-all duration-700 ease-out -translate-x-full" : "translate-x-0"}`}>
                     <div className='flex h-[14%] w-full items-center gap-4 border-b bg-white p-4'>
                         <img
                             src={currentUser !== undefined ? currentUser.pfp : ''}
@@ -159,7 +168,7 @@ export default function MainPage() {
                     />
                 </div>
                 :
-                <div className={`${!isVisible ? 'opacity-100' : 'opacity-0'} h-screen`}>
+                <div className={`${isChatDivSliding ? "transition-all duration-700 ease-in-out translate-x-full" : "translate-x-1"} h-screen`}>
                     {/* Header */}
                     <div className="flex h-[14%] w-full items-center gap-4 border-b bg-white p-4">
                         <img
@@ -170,18 +179,18 @@ export default function MainPage() {
                             <strong className="text-lg font-medium text-slate-900">
                                 {selectedUser?.username || '...'}
                             </strong>
-                            { (selectedUser !== undefined) && selectedUser.isOnline === true ? (
-                                    <span className="text-sm font-medium text-green-600 dark:text-slate-400">
-                                        Online
-                                    </span>
-                                ) : (
-                                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                                        Offline
-                                    </span>
+                            {(selectedUser !== undefined) && selectedUser.isOnline === true ? (
+                                <span className="text-sm font-medium text-green-600 dark:text-slate-400">
+                                    Online
+                                </span>
+                            ) : (
+                                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                                    Offline
+                                </span>
                             )}
                         </div>
                         <div className='flex h-[100%] w-[100%] justify-end items-center pr-2'>
-                            <Undo2 height={32} width={32} className="cursor-pointer rounded-md bg-gray-100 p-1 shadow-md transition-transform duration-200 hover:scale-110" />                            
+                            <Undo2 height={32} width={32} onClick={() => goBack()} className="cursor-pointer rounded-md bg-gray-100 p-1 shadow-md transition-transform duration-200 hover:scale-110" />                            
                         </div>
                     </div>
 

@@ -30,11 +30,7 @@ export default function Signup() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (
-            username.trim().length > 0 &&
-            email.trim().length > 0 &&
-            genderValue.length > 0
-        ) {
+        if (username.trim().length > 0 && email.trim().length > 0 && genderValue.length > 0) {
             handleRegister(
                 username,
                 email,
@@ -43,7 +39,8 @@ export default function Signup() {
                 genderValue,
                 navigate,
             );
-        } else if (password !== confirmPassword) {
+        } 
+        else if (password !== confirmPassword) {
             toast.error(`Password doesn't matches`, {
                 position: "top-center",
                 pauseOnHover: true,
@@ -51,7 +48,8 @@ export default function Signup() {
                 theme: "light",
                 transition: Zoom,
             });
-        } else {
+        } 
+        else {
             toast.error(`Please fill in all the fields`, {
                 position: "top-center",
                 pauseOnHover: true,
@@ -76,9 +74,7 @@ export default function Signup() {
         }));
     };
 
-    const handleConfirmPasswordChange = (
-        event: React.FormEvent<HTMLInputElement>,
-    ) => {
+    const handleConfirmPasswordChange = (event: React.FormEvent<HTMLInputElement>) => {
         const inputValue = event.currentTarget.value;
         setConfirmPassword(inputValue);
 
