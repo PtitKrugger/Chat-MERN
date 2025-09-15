@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { OrbitProgress } from "react-loading-indicators"
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
 import { AxiosResponse } from "axios";
 import Checkmark from "../../components/animations/checkmark";

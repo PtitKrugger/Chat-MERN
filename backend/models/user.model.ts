@@ -45,6 +45,22 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: undefined
     },
+    emailTokenRequestedAt: {
+        type: Date,
+        default: undefined
+    },
+    resetPasswordToken: {
+        type: String,
+        default: ""
+    },
+    resetPasswordTokenExpires: {
+        type: Date,
+        default: undefined
+    },
+    resetPasswordRequestedAt: {
+        type: Date,
+        default: undefined
+    },
     jwt: {
         type: String,
         default: ""

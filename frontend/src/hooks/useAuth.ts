@@ -127,8 +127,63 @@ export const useAuth = () => {
         }
         catch (e: any) {
             toast.error(
-                `An error has occurred: ${e.response?.data?.error || e.message}`,
+                `An error has occurred: ${e.response?.data?.error || e.message}`
             );
+        }
+    }
+
+    async function handleForgotPassword(email: string) {
+        try {
+            const response = await axios.post(
+                `http://localhost:5000/api/auth/forgot-password`,
+                {
+                    email
+                }
+            )
+
+            if (response.status === 200) {
+                toast.success(response.data.message)
+            }
+        }
+        catch (e: any) {
+            toast.error(
+                `An error has occurred: ${e.response?.data?.error || e.message}`
+            )
+        }
+    }
+
+    async function handleVerifyResetPasswordToken(token: string): Promise<AxiosResponse> {
+        try {
+            const response = await axios.get(
+                `http://localhost:5000/api/auth/reset-password?token=${token}`
+            )
+            return response;
+        } 
+        catch (e: any) {
+            /*toast.error(
+                `An error has occurred: ${e.response?.data?.error || e.message}`
+            )*/
+            return e.response;
+        }
+    }
+
+    async function handleResetPassword(token: string, password: string, confirmPassword: string, navigate: (path: string, options?: { state?: redirectToastMessage }) => void,) {
+        try {
+            const response = await axios.post(
+                `http://localhost:5000/api/auth/reset-password`,
+                {
+                    token, password, confirmPassword
+                }
+            )
+
+            if (response.status === 200) {
+                navigate("/login", { state: { showToast: true, message: response.data.message } });
+            }
+        }
+        catch (e: any) {
+            toast.error(
+                `An error has occurred: ${e.response?.data?.error || e.message}`
+            )
         }
     }
 
@@ -158,5 +213,5 @@ export const useAuth = () => {
         }
     }
 
-    return { handleRegister, handleLogin, handleLogout, handleVerifyEmail, handleResendVerificationEmail, checkAuth };
+    return { handleRegister, handleLogin, handleLogout, handleVerifyEmail, handleResendVerificationEmail, handleForgotPassword, handleVerifyResetPasswordToken, handleResetPassword,checkAuth };
 };

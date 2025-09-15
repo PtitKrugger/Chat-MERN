@@ -2,66 +2,29 @@ import { Request, Response } from "express"
 import bcryptjs from "bcryptjs"
 import crypto from "crypto"
 import jwt from "jsonwebtoken"
-import nodemailer from "nodemailer"
+
 import User from "../models/user.model"
 import { generateRefreshToken, generateToken } from "../utils/generateToken"
-
+import * as AuthHelper from "../helpers/auth.helper"
+import { sendMail } from "../helpers/mailer.helper"
 
 export const registerUser = async (req: Request, res: Response): Promise<any> => {
     try {
-        const {username, email, password, confirmPassword, gender} = req.body
+        const { username, email, password, confirmPassword, gender } = req.body
 
-        if (password !== confirmPassword) {
-            return res.status(400).json({error: "Passwords doesn't matches"})
-        }
-
-        // Valid password = 12 char - 64 char, 1 upper case, 1 lower case, 1 number, 1 special character
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,64}$/;
-        if (!passwordRegex.test(password)) {
-            return res.status(400).json({error: 'Please use a valid password'})
-        }
-        
-        const user = await User.findOne({username})
-
-        if (user) {
-            return res.status(400).json({error: 'Username already exists'})
-        }
-        else if (username < 3 || username > 30) {
-            return res.status(400).json({error: 'Your username must be 3–30 characters long.'})
-        } 
-
-        const existingEmail = await User.findOne({email})
-
-        if (existingEmail) {
-            return res.status(400).json({error: 'Please choose another email address'})
-        }
-        else if (email < 6 || email > 254) {
-            return res.status(400).json({error: 'Your email must be 6–254 characters long.'})    
-        }
-
-        const knownProviders = [
-            'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'live.com', 'icloud.com',
-            'protonmail.com', 'proton.me', 'yandex.com', 'aol.com', 'gmx.com'
-        ];
-
-        const mailProvider = email.match('^[^@]+@(.+)$')[1];
-
-        if (!knownProviders.includes(mailProvider)) {
-            return res.status(400).json({error: 'Please use a valid mail provider'})
-        }
+        await AuthHelper.validatePasswords(password, confirmPassword)
+        await AuthHelper.validateUsername(username)
+        await AuthHelper.validateEmail(email)
 
         const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`
         const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`
-
-        const salt = await bcryptjs.genSalt(10);
-        const hashedPassword = await bcryptjs.hash(password, salt)
 
         const emailToken = crypto.randomBytes(32).toString('hex');
 
         const newUser = new User({
             username,
             email,
-            password: hashedPassword,
+            password: await AuthHelper.generateHashedPassword(password),
             gender,
             pfp: gender === "male" ? boyProfilePic : girlProfilePic,
             emailToken,
@@ -71,81 +34,39 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
         if (newUser) {
             await newUser.save();
 
-            const transporter = nodemailer.createTransport({
-                host: "localhost",
-                port: 1025,
-                ignoreTLS: true
-            });
-
             try {
-                await transporter.sendMail({
-                    from: '"Chat App" <no-reply@chatapp.com>',
-                    to: email,
-                    subject: 'Verify your Email',
-                    text: `Please verify your account by clicking the link: http://localhost:5173/verify-email?token=${emailToken}`,
-                    html: `
-                    <!doctype html>
-                    <html>
-                        <body>
-                            <div style="font-family: sans-serif; padding: 20px;">
-                                <h2>Verify your email</h2>
-                                <p>Thanks for signing up! Please confirm your email by clicking the button below:</p>
-                                <p style="padding-top: 15px; padding-bottom: 15px;">
-                                    <a href="http://localhost:5173/verify-email?token=${emailToken}" style="background: #2563eb; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px;">
-                                    Verify my email
-                                    </a>
-                                </p>
-                                <p>If the button doesn’t work, copy and paste this link into your browser:</p>
-                                <p><a href="http://localhost:5173/verify-email?token=${emailToken}">http://localhost:5173/verify-email?token=${emailToken}</a></p>
-                            </div>
-                        </body>
-                    </html>
-                    `
-                })
+                await sendMail("register", email, emailToken)
             }
             catch (e) {
-                res.status(500).json({error: 'Internal server error'})
-                console.log(e)
+                res.status(500).json({ error: 'Internal server error' })
             }
 
-            res.status(201).json({
-                _id: newUser._id,
-                username: newUser.username,
-                gender: newUser.gender,
-                pfp: newUser.pfp,
-                message: 'We’ve sent you a verification email. Please check your inbox to verify your account.'
-            })
+            res.status(201).json({ message: 'We’ve sent you a verification email. Please check your inbox to verify your account.' })
         }
         else {
-            res.status(400).json({error: 'Invalid user data'})
+            res.status(400).json({ error: 'Invalid user data' })
         }
-        
-    }   
-    catch (e) {
-        console.log('Error in AuthController: ', e)
-        res.status(500).json({error: 'Internal server error'})
+    }
+    catch (e: any) {
+        //console.log('Error in AuthController: ', e)
+        res.status(e.status || 500).json({ error: e.error || 'Internal server error' })
     }
 }
 
 export const loginUser = async (req: Request, res: Response): Promise<any> => {
     try {
-        const {email, password} = req.body
-        const user = await User.findOne({email})
-        const isCorrect = await bcryptjs.compare(password, user?.password || '')
-        
-        if (user && user.isBanned) {
-            return res.status(403).json({error: 'Your account has been suspended.'})
+        const { email, password } = req.body
+
+        await AuthHelper.verifyUser(email)
+
+        const user = await User.findOne({ email })
+        const isPasswordCorrect = await bcryptjs.compare(password, user?.password || '')
+
+        if (!user || !isPasswordCorrect) {
+            return res.status(400).json({ error: 'Invalid email or password' })
         }
 
-        if (!user || !isCorrect) {
-            return res.status(400).json({error: 'Invalid email or password'})
-        }
-
-        if (!user.isEmailVerified) {
-            return res.status(403).json({errorType: 'emailNotVerified', error: 'Please verify your email before logging in.'})
-        }
-
-        const newJwt = generateToken(user._id.toString(), res)        
+        const newJwt = generateToken(user._id.toString(), res)
         const hashedToken = crypto.createHash("sha256").update(newJwt).digest("hex");
         user.jwt = hashedToken;
 
@@ -160,17 +81,17 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
             pfp: user.pfp
         })
     }
-    catch (e) {
-        res.status(500).json({error: 'Internal server error'})
+    catch (e: any) {
+        res.status(e.status || 500).json({ error: e.error || 'Internal server error' })
     }
 }
 
 export const logoutUser = async (req: Request, res: Response) => {
     try {
         const token = req.cookies.jwt
-        
+
         if (!token) {
-            res.status(400).json({error: 'You cannot log out because you are not logged in.'})
+            res.status(400).json({ error: 'You cannot log out because you are not logged in.' })
         }
         else {
             let decodedToken = jwt.verify(token, process.env.JWT_SECRET as string);
@@ -178,17 +99,17 @@ export const logoutUser = async (req: Request, res: Response) => {
             if (decodedToken) {
                 const user = await User.findById(decodedToken["userId"])
                 user!.jwt = "";
-                await user?.save();
+                await user!.save();
             }
 
             res.clearCookie("jwt")
             //res.clearCookie("jwt_refresh")
 
-            res.status(200).json({message: 'Logged out successfully'})            
+            res.status(200).json({ message: 'Logged out successfully' })
         }
     }
-    catch (e) {
-        res.status(500).json({error: 'Internal server error'})
+    catch (e: any) {
+        res.status(e.status || 500).json({ error: e.error || 'Internal server error' })
     }
 }
 
@@ -197,17 +118,17 @@ export const verifyEmail = async (req: Request, res: Response): Promise<any> => 
         const { token } = req.query
 
         if (!token) {
-            return res.status(400).json({error: 'No token'})
+            return res.status(400).json({ error: 'No token' })
         }
 
         const user = await User.findOne({ emailToken: token });
         if (!user) {
-            return res.status(400).json({error: 'Invalid token'})
+            return res.status(400).json({ error: 'Invalid token' })
         }
 
         if (user.emailTokenExpires) {
             if (user.emailTokenExpires.getTime() < Date.now()) {
-                return res.status(400).json({error: 'Token expired'})
+                return res.status(400).json({ error: 'Token expired' })
             }
         }
 
@@ -216,71 +137,126 @@ export const verifyEmail = async (req: Request, res: Response): Promise<any> => 
         user.emailTokenExpires = undefined;
         await user.save();
 
-        return res.status(200).json({message: 'Your email has been successfully verified'})
+        return res.status(200).json({ message: 'Your email has been successfully verified' })
     }
-    catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
+    catch (e: any) {
+        res.status(e.status || 500).json({ error: e.error || 'Internal server error' })
     }
 }
 
 export const resendEmailVerification = async (req: Request, res: Response): Promise<any> => {
-    const {email} = req.body
+    try {
+        const { email } = req.body
 
-    const user = await User.findOne({email})
+        if (email < 6 || email > 254) {
+            return res.status(400).json({ error: 'Your email must be 6–254 characters long.' })
+        }
 
-    if (user && user.isEmailVerified) {
-        return res.status(200).json({message: 'We’ve sent you a verification email. Please check your inbox to verify your account.'})
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.status(200).json({ message: 'We’ve sent you a verification email. Please check your inbox to verify your account.' })
+        }
+
+        const now = new Date(Date.now())
+        if (user.emailTokenRequestedAt && now.getTime() - user.emailTokenRequestedAt.getTime() < 5 * 60 * 1000) {
+            return res.status(429).json({ error: "You can request a new verification email in a few minutes." })
+        }
+
+        if (user && !user.isEmailVerified) {
+            const emailToken = crypto.randomBytes(32).toString('hex');
+            user.emailToken = emailToken
+            user.emailTokenExpires = new Date(Date.now() + 3600000)
+            await user.save()
+
+            try {
+                await sendMail("verifyEmail", email, emailToken)
+            }
+            catch (e) {
+                res.status(500).json({ error: 'Internal server error' })
+                //console.log(e)
+            }
+
+            user.emailTokenRequestedAt = new Date(Date.now())
+            await user.save()
+
+            res.status(200).json({ message: 'We’ve sent you a verification email. Please check your inbox to verify your account.' })
+        }
     }
-
-    if (email < 6 || email > 254) {
-        return res.status(400).json({error: 'Your email must be 6–254 characters long.'})    
+    catch (e: any) {
+        res.status(e.status || 500).json({ error: e.error || 'Internal server error' })
     }
+}
 
-    if (user && !user.isEmailVerified) {
-        const emailToken = crypto.randomBytes(32).toString('hex');
-        user.emailToken = emailToken
-        user.emailTokenExpires = new Date(Date.now() + 3600000)
+export const forgotPassword = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { email } = req.body
 
+        if (email < 6 || email > 254) {
+            return res.status(400).json({ error: 'Your email must be 6–254 characters long.' })
+        }
+
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.status(200).json({ message: 'We’ve sent you an email with instructions to reset your password.' })
+        }
+
+        const now = new Date(Date.now())
+        if (user.resetPasswordRequestedAt && now.getTime() - user.resetPasswordRequestedAt.getTime() < 5 * 60 * 1000) {
+            return res.status(429).json({ error: "You can request a new password reset email in a few minutes." })
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        user.resetPasswordToken = resetToken
+        user.resetPasswordTokenExpires = new Date(Date.now() + 3600000) // 1h
         await user.save()
 
-        const transporter = nodemailer.createTransport({
-            host: "localhost",
-            port: 1025,
-            ignoreTLS: true
-        });
-
         try {
-            await transporter.sendMail({
-                from: '"Chat App" <no-reply@chatapp.com>',
-                to: email,
-                subject: 'Verify your Email',
-                text: `Please verify your account by clicking the link: http://localhost:5173/verify-email?token=${emailToken}`,
-                html: `
-                <!doctype html>
-                <html>
-                    <body>
-                        <div style="font-family: sans-serif; padding: 20px;">
-                            <h2>Verify your email</h2>
-                            <p>Thanks for signing up! Please confirm your email by clicking the button below:</p>
-                            <p style="padding-top: 15px; padding-bottom: 15px;">
-                                <a href="http://localhost:5173/verify-email?token=${emailToken}" style="background: #2563eb; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px;">
-                                Verify my email
-                                </a>
-                            </p>
-                            <p>If the button doesn’t work, copy and paste this link into your browser:</p>
-                            <p><a href="http://localhost:5173/verify-email?token=${emailToken}">http://localhost:5173/verify-email?token=${emailToken}</a></p>
-                        </div>
-                    </body>
-                </html>
-                `
-            })
-
-            res.status(200).json({message: 'We’ve sent you a verification email. Please check your inbox to verify your account.'})
+            await sendMail("resetPassword", email, resetToken)
         }
         catch (e) {
-            res.status(500).json({error: 'Internal server error'})
-            console.log(e)
+            res.status(500).json({ error: 'Internal server error' })
+            //console.log(e)
         }
+
+        user.resetPasswordRequestedAt = new Date(Date.now())
+        await user.save()
+
+        res.status(200).json({ message: 'We’ve sent you an email with instructions to reset your password.' })
+    }
+    catch (e: any) {
+        res.status(e.status || 500).json({ error: e.error || 'Internal server error' })
+    }
+}
+
+export const verifyResetPasswordToken = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { token } = req.query
+
+        await AuthHelper.validateResetPasswordToken(token.toString())
+
+        res.status(200).json({ message: "Token verified successfully. You may proceed to reset your password." })
+    } 
+    catch (e: any) {
+        res.status(e.status || 500).json({ error: e.error || 'Internal server error' })
+    }
+}
+
+export const resetPassword = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { token, password, confirmPassword } = req.body
+
+        const user = await AuthHelper.validateResetPasswordToken(token)
+        await AuthHelper.validatePasswords(password, confirmPassword)
+
+        user.password = await AuthHelper.generateHashedPassword(password)
+        user.resetPasswordToken = ""
+        user.resetPasswordTokenExpires = undefined
+        await user.save()
+
+        return res.status(200).json({ message: 'Your password has been successfully reset.'})
+    }
+    catch (e: any) {
+        res.status(e.status || 500).json({ error: e.error || 'Internal server error' })
     }
 }
 
@@ -303,4 +279,3 @@ export const checkAuth = (req: Request, res: Response): void => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
-

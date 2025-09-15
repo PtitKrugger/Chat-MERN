@@ -109,9 +109,18 @@ export default function Login() {
                         No account ?&nbsp;
                         <Link
                             to="/register"
-                            className="font-semibold text-blue-600 hover:text-blue-500"
+                            className="font-semibold text-blue-600 hover:text-blue-500 hover:underline"
                         >
                             Register
+                        </Link>
+                    </p>
+                    <p className="mt-3 text-center text-sm/6 text-gray-500">
+                        Forgot your password ?&nbsp;
+                        <Link
+                            to="/forgot-password"
+                            className="font-semibold text-blue-600 hover:text-blue-500 hover:underline"
+                        >
+                            Reset your password
                         </Link>
                     </p>
                 </div>

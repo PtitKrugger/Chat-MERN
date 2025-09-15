@@ -10,6 +10,8 @@ import Logout from "./pages/auth/Logout.tsx";
 import MainPage from "./pages/chat/MainPage.tsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 import VerifyEmail from "./pages/auth/VerifyEmail.tsx";
+import ForgotPassword from "./pages/auth/ForgotPassword.tsx";
+import ResetPassword from "./pages/auth/ResetPassword.tsx";
 
 function getRouter() {
   const router = createBrowserRouter([
@@ -26,8 +28,16 @@ function getRouter() {
       element: <Logout />,
     },
     {
-        path: "verify-email",
+        path: "/verify-email",
         element: <VerifyEmail />
+    },
+    {
+        path: "/forgot-password",
+        element: <ForgotPassword />
+    },
+    {
+        path: "/reset-password",
+        element: <ResetPassword />
     },
     {
       element: <ProtectedRoute />,
