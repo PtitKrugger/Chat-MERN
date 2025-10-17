@@ -20,6 +20,7 @@ Users can chat directly with their contacts, see when the other person is typing
 * 📧 **Email Verification**: Users must validate their email to activate their account
 * 🔑 **Forgot Password**: Password reset system via email (Nodemailer)
 * 👥 **Direct Chat with Contacts**: Users can message their contacts (no group chats yet)
+* 🟢 **User Status**: Users can set and update their online status (Online, Away, Busy)
 * ⚡ **Responsive UI**: Clean and intuitive interface built with React
 * 📝 **TypeScript**: Fully typed backend (tsx + Express) and frontend
 * 🗄 **Message and User Storage**: MongoDB database with Mongoose
