@@ -213,5 +213,5 @@ export const useAuth = () => {
         }
     }
 
-    return { handleRegister, handleLogin, handleLogout, handleVerifyEmail, handleResendVerificationEmail, handleForgotPassword, handleVerifyResetPasswordToken, handleResetPassword,checkAuth };
+    return { handleRegister, handleLogin, handleLogout, handleVerifyEmail, handleResendVerificationEmail, handleForgotPassword, handleVerifyResetPasswordToken, handleResetPassword, checkAuth };
 };

@@ -6,6 +6,8 @@ import { useNavigate } from "react-router";
 
 import { useAuth } from "../../hooks/useAuth";
 import type { redirectToastMessage } from "../../types/redirectToastMessage"
+import EmailInput from "../../components/inputs/EmailInput";
+import PasswordInput from "../../components/inputs/PasswordInput";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -13,6 +15,7 @@ export default function Login() {
     const { handleLogin } = useAuth();
     const navigate = useNavigate();
 
+    // If there was a redirect message from a request
     const location = useLocation();
     const state = location.state as redirectToastMessage | undefined;
 
@@ -30,7 +33,10 @@ export default function Login() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        handleLogin(email, password, navigate);
+        
+        if ((email !== "" || email.length >= 6) /*&& (password !== "" && password.length >= 12)*/) {
+            handleLogin(email, password, navigate);
+        }
     };
 
     return (
@@ -46,52 +52,22 @@ export default function Login() {
                 <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
                     <form onSubmit={handleSubmit} method="POST" className="space-y-6">
                         <div>
-                            <label
-                                htmlFor="email"
-                                className="flex text-sm/6 font-medium text-gray-900"
-                            >
+                            <label htmlFor="email" className="flex text-sm/6 font-medium text-gray-900">
                                 Email address
                             </label>
                             <div className="mt-2">
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    required
-                                    autoComplete="email"
-                                    minLength={6}
-                                    maxLength={254}
-                                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                                    onInput={(e) =>
-                                        setEmail((e.target as HTMLInputElement).value)
-                                    }
-                                />
+                                <EmailInput email={email} setEmail={setEmail} />
                             </div>
                         </div>
 
                         <div>
                             <div className="flex items-center justify-between">
-                                <label
-                                    htmlFor="password"
-                                    className="block text-sm/6 font-medium text-gray-900"
-                                >
+                                <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900">
                                     Password
                                 </label>
                             </div>
                             <div className="mt-2">
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    required
-                                    autoComplete="current-password"
-                                    minLength={12}
-                                    maxLength={64}
-                                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                                    onInput={(e) =>
-                                        setPassword((e.target as HTMLInputElement).value)
-                                    }
-                                />
+                                <PasswordInput password={password} setPassword={setPassword} />
                             </div>
                         </div>
 

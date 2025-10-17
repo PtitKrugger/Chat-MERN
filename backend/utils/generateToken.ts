@@ -5,7 +5,7 @@ export function generateToken(userId: string, res: Response): string {
     const token = jwt.sign({userId}, process.env.JWT_SECRET as string)
 
     res.cookie('jwt', token, {
-        expires: new Date(Date.now() + (15 * 60 * 1000)), // 15min (15 * 60 * 1000)
+        expires: new Date(Date.now() + (60 * 60 * 1000)), // 15min (15 * 60 * 1000)
         httpOnly: true, // Anti XSS
         sameSite: "strict", // Anti CSRF
         secure: process.env.NODE_ENV !== "development"

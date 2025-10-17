@@ -49,7 +49,7 @@ export default function Crossmark() {
                 style={{ pathLength: crossPathLength }}
             />
 
-            {/* Cercle */}
+            {/* Circle */}
             <motion.path
                 d="M 130 6 C 198.483 6 254 61.517 254 130 C 254 198.483 198.483 254 130 254 C 61.517 254 6 198.483 6 130 C 6 61.517 61.517 6 130 6 Z"
                 fill="transparent"

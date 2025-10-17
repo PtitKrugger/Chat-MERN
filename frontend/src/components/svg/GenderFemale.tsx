@@ -1,12 +1,12 @@
 import React from "react";
 
 interface IconGenderFemaleProps {
-    currentColor: string;
-    height: string;
-    width: string;
+    currentColor?: string;
+    height?: string;
+    width?: string;
 }
 
-function IconGenderFemale({ currentColor, height, width }: IconGenderFemaleProps) {
+export default function IconGenderFemale({ currentColor = "#ec4899", height = "32px", width = "32px" }: IconGenderFemaleProps) {
     return (
         <svg fill={currentColor} viewBox="0 0 16 16" height={height} width={width}>
             <path
@@ -16,5 +16,3 @@ function IconGenderFemale({ currentColor, height, width }: IconGenderFemaleProps
         </svg>
     );
 }
-
-export default IconGenderFemale;

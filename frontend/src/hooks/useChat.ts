@@ -3,26 +3,32 @@ import { useEffect, useState } from "react";
 import { toast, Zoom } from "react-toastify";
 import { User } from "../types/user";
 
+type onlineUsers = {
+    userId: string,
+    status: string
+}
+
 export const useChat = () => {
     const [users, setUsers] = useState<Array<User>>([]);
-    const [onlineUserIds, setOnlineUserIds] = useState<Array<string>>([]);
+    const [onlineUsers, setOnlineUsers] = useState<Array<onlineUsers>>([]);
     const [usersLoaded, setUsersLoaded] = useState(false);
 
     useEffect(() => {
-        if (!usersLoaded || onlineUserIds.length === 0) return;
+        if (!usersLoaded || onlineUsers.length === 0) return;
 
         setUsers((prevUsers) =>
             prevUsers
                 .map((user) => ({
                     ...user,
-                    isOnline: onlineUserIds.includes(user._id),
+                    isOnline: onlineUsers.some((onlineUser) => onlineUser.userId === user._id),
+                    status: onlineUsers.some((onlineUser) => user._id === onlineUser.userId) ? onlineUsers.find((onlineUser) => onlineUser.userId === user._id)['status'] : ""
                 }))
                 .sort((a, b) => {
-                    // Trier en ligne (true) en haut
+                    // Sort users by online status
                     return a.isOnline === b.isOnline ? 0 : a.isOnline ? -1 : 1;
                 }),
         );
-    }, [usersLoaded, onlineUserIds]);
+    }, [usersLoaded, onlineUsers]);
 
     async function getAllUsers() {
         try {
@@ -100,10 +106,9 @@ export const useChat = () => {
 
     return {
         getAllUsers,
-        setOnlineUserIds,
-        onlineUserIds,
+        setOnlineUsers,
         getConversation,
         sendNewMessage,
-        users,
+        users
     };
 };

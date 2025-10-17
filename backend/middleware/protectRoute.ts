@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/user.model";
 
@@ -12,7 +12,7 @@ const protectRoute = async (req: Request, res: Response, next: Function): Promis
             return res.status(401).json({ error: "Unauthorized Access - No Token" });
         }
 
-        let decodedToken;
+        let decodedToken: string | JwtPayload;
 
         try {
             if (token) {
@@ -35,7 +35,7 @@ const protectRoute = async (req: Request, res: Response, next: Function): Promis
             return res.status(401).json({ error: "Unauthorized Access - Invalid or Expired Token" });
         }
 
-        const user = await User.findById(decodedToken["userId"]).select("-password -email -gender -createdAt -updatedAt");
+        const user = await User.findById(decodedToken["userId"]).select("_id username pfp");
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });

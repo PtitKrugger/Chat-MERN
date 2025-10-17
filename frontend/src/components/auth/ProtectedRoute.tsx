@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 export default function ProtectedRoute() {
     const { checkAuth } = useAuth();
-    const [isAuthenticated, setIsAuthenticated] = useState<null | boolean>(null); // null = état de chargement
+    const [isAuthenticated, setIsAuthenticated] = useState<null | boolean>(null); 
 
     useEffect(() => {
         const verifyAuth = async () => {
@@ -15,7 +15,7 @@ export default function ProtectedRoute() {
     }, []);
 
     if (isAuthenticated === null) {
-        return <p>Loading...</p>; // Un état de chargement temporaire
+        return <p>Loading...</p>;
     }
 
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;

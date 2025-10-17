@@ -4,4 +4,5 @@ export type User = {
   email: string;
   pfp: string;
   isOnline: boolean;
+  status: string;
 };

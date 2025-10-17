@@ -262,7 +262,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<any> =
 
 export const checkAuth = (req: Request, res: Response): void => {
     try {
-        const refreshToken = req.cookies.jwt_refresh;
+        /*const refreshToken = req.cookies.jwt_refresh;
 
         if (refreshToken) {
             try {
@@ -272,7 +272,7 @@ export const checkAuth = (req: Request, res: Response): void => {
                 res.status(401).json({ message: "Invalid or Expired Refresh Token" });
                 return;
             }
-        }
+        }*/
 
         res.status(200).json(req['user']);
     } catch (error) {
